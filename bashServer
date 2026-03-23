@@ -90,12 +90,19 @@ enable accept || fatel 'faild to load accept'
 
 PORT=8080
 ADDRESS='0.0.0.0'
+function main() {
 
   echo "Listening on http://$ADDRESS:$PORT"
   local fd
+  while true; do
     accept -b "$ADDRESS" -v fd "$PORT" || fatel "feil to read from socket"
+    parse-request <&"$fd"
+    handle-request "$fd"
 
     # close the file descriptor / client
     exec {fd}>&-
+  done
 
+}
 
+main "$@"
