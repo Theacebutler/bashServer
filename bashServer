@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+fatel() {
+  # echo all the args from the user to stderr
+  echo '[fatel]' "$@" >&2
+  exit 1
+}
+
+# Bash does not have a built-in way to listen on a port, but we can use loadable builtins that come with bash.
+# A list of the loadable commands can be found at $BASH_LOADABLES_PATH, some systems do not come with the loadable
+# builtins installed. In that case, you can build them from source form https://git.savannah.gnu.org/git/bash.git,
+# you will need to place the dir in the $BASH_LOADABLES_PATH, of add it to the $BASH_LOADABLES_PATH, and follow the
+# INSTALL file.
+enable accept || fatel 'faild to load accept'
+
+PORT=8080
+ADDRESS='0.0.0.0'
+
+  echo "Listening on http://$ADDRESS:$PORT"
+  local fd
+    accept -b "$ADDRESS" -v fd "$PORT" || fatel "feil to read from socket"
+
+    # close the file descriptor / client
+    exec {fd}>&-
+
+
