@@ -52,33 +52,40 @@ parse-request() {
 
 handle-request() {
   local fd="$1"
+  local status
+  status=200
 
   # validate request
-  [[ ${REQ_INFO[version]} == 'HTTP/1.1' ]] || fatel "invalid HTTP version"
-
-  # handle different metohds
-  case ${REQ_INFO[metohd]} in
-  "GET") ;;
-  "POST") ;;
-  *)
-    printf 'HTTP/1.1 405 Method Not Allowed\r\n' >&"$fd"
-    printf '\r\n' >&"$fd"
-    ;;
-  esac
+  [[ ${REQ_INFO[version]} == 'HTTP/1.1' ]] || status=400
 
   # we can write back to the file descriptor
   local path=${REQ_INFO[path]}
   path=${path:1}
-  if [[ -f $path ]]; then
+
+  [[ -f $path ]] || status=404
+
+  case "$status" in
+  200)
     printf 'HTTP/1.1 200 ok\r\n' >&"$fd"
     printf 'Content-type: text/plain\r\n' >&"$fd"
     printf 'Connction: closed\r\n' >&"$fd"
     printf '\r\n' >&"$fd"
     cat "$path" >&"$fd"
-  else
+    ;;
+  400)
+    printf 'HTTP/1.1 400 Bad Request\r\n' >&"$fd"
+    printf '\r\n' >&"$fd"
+    ;;
+  404)
     printf 'HTTP/1.1 404 Not Found\r\n' >&"$fd"
     printf '\r\n' >&"$fd"
-  fi
+    ;;
+  *)
+    printf 'HTTP/1.1 500 Internal Server Error\r\n' >&"$fd"
+    printf '\r\n' >&"$fd"
+    ;;
+  esac
+
 }
 
 # Bash does not have a built-in way to listen on a port, but we can use loadable builtins that come with bash.
