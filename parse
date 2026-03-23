@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+s="GET /foo HTTP/1.1
+Host: 127.0.0.1:8080
+User-Agent: curl/8.14.1
+Accept: */*"
+
+# HTTP specs:
+# request line\r\n
+# key: value\r\n
+# key: value\r\n
+# key: value\r\n
+# \r\n
+# body
+
+# request line: METHOD [SP] ADDRESS [SP] METHOD [\r\n]
+#
+
+parse-request() {
+  declare -gA REQ_INFO=()
+  declare -gA REQ_HEADERS=()
+
+  state="status"
+  local line
+
+  while read -r line; do
+    # this will remove the \r from the end of the line
+    line=${line%$'\r'}
+
+    case "$state" in
+    "status")
+      local met path version
+      read -r met path version <<<"$line"
+      REQ_INFO[metohd]=$met
+      REQ_INFO[path]=$path
+      REQ_INFO[version]=$version
+      state="headers"
+      ;;
+    "headers")
+      if [[ -z $line ]]; then
+        state="done"
+      fi
+      local key value
+      # set the separator (IFS) to :
+      IFS=: read -r key value <<<"$line"
+      # lowercase the key, with this notation
+      key=${key,,}
+      # remove whitespace from the left of the value
+      value=${value# *}
+      REQ_HEADERS[$key]=$value
+      ;;
+    "body")
+      command ...
+      ;;
+    "done")
+      break
+      ;;
+    esac
+  done
+}
+
+parse-request <<<"$s"
+
+echo "REQ_INFO"
+for key in "${!REQ_INFO[@]}"; do
+  val=${REQ_INFO[$key]}
+  echo "$key: $val"
+done
+
+echo "REQ_HEADERS"
+for key in "${!REQ_HEADERS[@]}"; do
+  val=${REQ_HEADERS[$key]}
+  echo "$key: $val"
+done

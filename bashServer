@@ -6,6 +6,50 @@ fatel() {
   exit 1
 }
 
+parse-request() {
+  declare -gA REQ_INFO=()
+  declare -gA REQ_HEADERS=()
+
+  state="status"
+  local line
+
+  while read -r line; do
+    # this will remove the \r from the end of the line
+    line=${line%$'\r'}
+
+    case "$state" in
+    "status")
+      local method path version
+      read -r method path version <<<"$line"
+      REQ_INFO[metohd]=$method
+      REQ_INFO[path]=$path
+      REQ_INFO[version]=$version
+      state="headers"
+      ;;
+    "headers")
+      if [[ -z $line ]]; then
+        state="done"
+        break
+      fi
+      local key value
+      # set the separator (IFS) to :
+      IFS=: read -r key value <<<"$line"
+      # lowercase the key, with this notation
+      key=${key,,}
+      # remove whitespace from the left of the value
+      value=${value# *}
+      REQ_HEADERS[$key]=$value
+      ;;
+    "body")
+      command ...
+      ;;
+    "done")
+      break
+      ;;
+    esac
+  done
+}
+
   # we can write back to the file descriptor
     printf 'HTTP/1.1 200 ok\r\n' >&"$fd"
     printf 'Content-type: text/plain\r\n' >&"$fd"
