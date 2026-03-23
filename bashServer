@@ -50,11 +50,36 @@ parse-request() {
   done
 }
 
+handle-request() {
+  local fd="$1"
+
+  # validate request
+  [[ ${REQ_INFO[version]} == 'HTTP/1.1' ]] || fatel "invalid HTTP version"
+
+  # handle different metohds
+  case ${REQ_INFO[metohd]} in
+  "GET") ;;
+  "POST") ;;
+  *)
+    printf 'HTTP/1.1 405 Method Not Allowed\r\n' >&"$fd"
+    printf '\r\n' >&"$fd"
+    ;;
+  esac
+
   # we can write back to the file descriptor
+  local path=${REQ_INFO[path]}
+  path=${path:1}
+  if [[ -f $path ]]; then
     printf 'HTTP/1.1 200 ok\r\n' >&"$fd"
     printf 'Content-type: text/plain\r\n' >&"$fd"
     printf 'Connction: closed\r\n' >&"$fd"
     printf '\r\n' >&"$fd"
+    cat "$path" >&"$fd"
+  else
+    printf 'HTTP/1.1 404 Not Found\r\n' >&"$fd"
+    printf '\r\n' >&"$fd"
+  fi
+}
 
 # Bash does not have a built-in way to listen on a port, but we can use loadable builtins that come with bash.
 # A list of the loadable commands can be found at $BASH_LOADABLES_PATH, some systems do not come with the loadable

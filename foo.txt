@@ -1,0 +1,4 @@
+Hello world from foo, this is a test file for the bash server
+
+
+hahahahaha so cool, lets go nerds
