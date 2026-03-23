@@ -6,6 +6,12 @@ fatel() {
   exit 1
 }
 
+  # we can write back to the file descriptor
+    printf 'HTTP/1.1 200 ok\r\n' >&"$fd"
+    printf 'Content-type: text/plain\r\n' >&"$fd"
+    printf 'Connction: closed\r\n' >&"$fd"
+    printf '\r\n' >&"$fd"
+
 # Bash does not have a built-in way to listen on a port, but we can use loadable builtins that come with bash.
 # A list of the loadable commands can be found at $BASH_LOADABLES_PATH, some systems do not come with the loadable
 # builtins installed. In that case, you can build them from source form https://git.savannah.gnu.org/git/bash.git,
