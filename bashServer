@@ -67,7 +67,7 @@ handle-request() {
   case "$status" in
   200)
     printf 'HTTP/1.1 200 ok\r\n' >&"$fd"
-    printf 'Content-type: text/plain\r\n' >&"$fd"
+    printf 'Content-type: text/html\r\n' >&"$fd"
     printf 'Connction: closed\r\n' >&"$fd"
     printf '\r\n' >&"$fd"
     cat "$path" >&"$fd"
